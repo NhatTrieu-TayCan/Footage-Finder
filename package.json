@@ -1,0 +1,10 @@
+{
+  "name": "footage-finder-studio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "ui": "uv run footage-finder ui",
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend"
+  }
+}

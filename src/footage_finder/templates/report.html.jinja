@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footage Finder Report - {{ script_name }}</title>
+  <style>
+    :root {
+      --bg-primary: #0f1117;
+      --bg-card: #181b23;
+      --bg-card-hover: #1f232e;
+      --border: #2a2e3d;
+      --border-accent: #3b82f6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #38bdf8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #a855f7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    .header-title h1 { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .header-title p { color: var(--text-muted); font-size: 0.95rem; }
+
+    .header-stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      text-align: center;
+    }
+    .stat-pill .num { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+    .stat-pill .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      align-items: center;
+    }
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-secondary {
+      background: #334155;
+      color: #f1f5f9;
+    }
+    .btn-secondary:hover { background: #475569; }
+
+    /* Segment Card */
+    .segment-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+    .segment-header {
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .seg-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .status-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-ok { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #059669; }
+    .status-weak_matches { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid #d97706; }
+    .status-no_match { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid #e11d48; }
+
+    .segment-body { padding: 20px; }
+    .narration-box {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .intent-box {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .intent-label { color: var(--accent); font-weight: 600; }
+    .entity-tag {
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #cbd5e1;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    .suggestion-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 10px 14px;
+      border-radius: 6px;
+      color: #fde68a;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+    }
+
+    /* Picks Grid */
+    .picks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .pick-card {
+      background: #13161f;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .pick-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .pick-thumb-wrapper {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .pick-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #090b10;
+    }
+    .select-checkbox {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 22px;
+      height: 22px;
+      accent-color: #2563eb;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .badge-top-left {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .rank-badge {
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .score-badge {
+      background: rgba(16, 185, 129, 0.85);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .license-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .license-public_domain { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #059669; }
+    .license-creative_commons { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #0284c7; }
+    .license-unknown { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #64748b; }
+    .badge-credit-required { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; }
+    .badge-concern { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid #e11d48; margin-top: 4px; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
+
+    .pick-details {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-grow: 1;
+    }
+    .pick-reason {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      line-height: 1.4;
+    }
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      gap: 6px;
+    }
+    .attr-text-box {
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px 8px;
+      border-radius: 4px;
+      color: #94a3b8;
+      border: 1px solid var(--border);
+      word-break: break-all;
+    }
+    .pick-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .pick-links a {
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .pick-links a:hover { text-decoration: underline; }
+
+    /* Alternates toggle */
+    details.alternates-collapse {
+      margin-top: 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    details summary {
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    details summary:hover { color: var(--accent); }
+
+    /* Video leads */
+    .video-leads-container {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .video-leads-title {
+      font-size: 0.85rem;
+      color: #f43f5e;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .video-card {
+      background: #13161f;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      gap: 10px;
+    }
+    .video-thumb { width: 90px; height: 60px; object-fit: cover; border-radius: 4px; }
+    .video-info h4 { font-size: 0.8rem; font-weight: 600; color: #fff; line-height: 1.2; margin-bottom: 4px; }
+    .video-info p { font-size: 0.75rem; color: var(--text-dim); }
+    .video-info a { font-size: 0.75rem; color: #f43f5e; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="header-title">
+      <h1>🎬 Footage Finder Report</h1>
+      <p>Script: <strong>{{ script_name }}</strong> • Generated: {{ timestamp }}</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill">
+        <div class="num">{{ stats.total_segments }}</div>
+        <div class="label">Segments</div>
+      </div>
+      <div class="stat-pill">
+        <div class="num">{{ stats.total_candidates }}</div>
+        <div class="label">Candidates</div>
+      </div>
+      <div class="stat-pill">
+        <div class="num" style="color: var(--rose);">{{ stats.total_watermark_removed }}</div>
+        <div class="label">WM Blocked</div>
+      </div>
+      <div class="stat-pill">
+        <div class="num" style="color: var(--emerald);">${{ "%.4f"|format(stats.estimated_cost_usd) }}</div>
+        <div class="label">Est. Cost</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="exportSelectedCSV()">📥 Export Selected (CSV)</button>
+      <button class="btn btn-secondary" onclick="toggleSelectAll(true)">Select All Top Picks</button>
+      <button class="btn btn-secondary" onclick="toggleSelectAll(false)">Deselect All</button>
+      <span style="margin-left: auto; font-size: 0.85rem; color: var(--text-dim);">
+        Checked items will export to CSV ready for DaVinci Resolve batch import
+      </span>
+    </div>
+  </header>
+
+  <!-- Segment Cards -->
+  {% for rep in reports %}
+  <div class="segment-card" id="{{ rep.segment.id }}">
+    <div class="segment-header">
+      <div class="seg-badge">{{ rep.segment.id }}</div>
+      <div class="status-badge status-{{ rep.status.value }}">{{ rep.status.value.replace('_', ' ') }}</div>
+    </div>
+    <div class="segment-body">
+      <div class="narration-box">"{{ rep.segment.text }}"</div>
+      <div class="intent-box">
+        <span class="intent-label">Visual Intent:</span> {{ rep.intent.visual_intent }}
+        {% for entity in rep.intent.entities %}
+          <span class="entity-tag">{{ entity }}</span>
+        {% endfor %}
+      </div>
+
+      {% if rep.suggestion %}
+      <div class="suggestion-box">
+        💡 <strong>Archivist Note:</strong> {{ rep.suggestion }}
+      </div>
+      {% endif %}
+
+      <!-- Top Picks Gallery -->
+      <div class="picks-grid">
+        {% for pick in rep.top_picks %}
+        <div class="pick-card" data-seg="{{ rep.segment.id }}">
+          <div class="pick-thumb-wrapper">
+            <input type="checkbox"
+                   class="select-checkbox"
+                   data-seg="{{ rep.segment.id }}"
+                   data-rank="{{ pick.rank }}"
+                   data-img="{{ pick.candidate.image_url }}"
+                   data-page="{{ pick.candidate.source_page_url }}"
+                   data-domain="{{ pick.candidate.source_domain }}"
+                   data-width="{{ pick.candidate.width or '' }}"
+                   data-height="{{ pick.candidate.height or '' }}"
+                   data-score="{{ pick.relevance_score }}"
+                   data-reason="{{ pick.reason }}"
+                   data-license="{{ pick.candidate.license.value }}"
+                   data-author="{{ pick.candidate.author or '' }}"
+                   data-attr="{{ pick.candidate.attribution_text or '' }}"
+                   {% if loop.first %}checked{% endif %}>
+            
+            <a href="{{ pick.candidate.source_page_url }}" target="_blank" rel="noopener">
+              <img class="pick-thumb"
+                   src="{{ pick.candidate.local_thumbnail_path | relative_path(output_dir) if pick.candidate.local_thumbnail_path else pick.candidate.thumbnail_url }}"
+                   alt="{{ pick.candidate.title or pick.reason }}"
+                   loading="lazy">
+            </a>
+
+            <div class="badge-top-left">
+              <span class="rank-badge">#{{ pick.rank }}</span>
+              <span class="score-badge">★ {{ "%.1f"|format(pick.relevance_score) }}/10</span>
+            </div>
+          </div>
+
+          <div class="pick-details">
+            <p class="pick-reason">{{ pick.reason }}</p>
+
+            <div class="meta-line">
+              <span class="license-badge license-{{ pick.candidate.license.value }}">{{ pick.candidate.license_name or pick.candidate.license.value }}</span>
+              {% if pick.candidate.attribution_required %}
+                <span class="license-badge badge-credit-required">Credit required</span>
+              {% endif %}
+              <span>{{ pick.candidate.source_domain }}</span>
+            </div>
+
+            {% if pick.concerns %}
+              {% for concern in pick.concerns %}
+                <span class="badge-concern">⚠️ {{ concern }}</span>
+              {% endfor %}
+            {% endif %}
+
+            {% if pick.candidate.width and pick.candidate.height %}
+            <div class="meta-line">
+              <span>{{ pick.candidate.width }}×{{ pick.candidate.height }} ({{ pick.candidate.aspect_ratio or '?' }})</span>
+            </div>
+            {% endif %}
+
+            {% if pick.candidate.attribution_text %}
+            <div class="attr-text-box">
+              {{ pick.candidate.attribution_text }}
+            </div>
+            {% endif %}
+
+            <div class="pick-links">
+              <a href="{{ pick.candidate.source_page_url }}" target="_blank" rel="noopener">Source Page ↗</a>
+              <a href="{{ pick.candidate.image_url }}" target="_blank" rel="noopener">Full Image ↗</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Alternates Collapsible -->
+      {% if rep.alternates %}
+      <details class="alternates-collapse">
+        <summary>View {{ rep.alternates | length }} Alternate Candidates</summary>
+        <div class="picks-grid" style="margin-top: 12px;">
+          {% for alt in rep.alternates %}
+          <div class="pick-card" style="opacity: 0.9;">
+            <div class="pick-thumb-wrapper" style="height: 180px;">
+              <input type="checkbox"
+                     class="select-checkbox"
+                     data-seg="{{ rep.segment.id }}"
+                     data-rank="{{ alt.rank }}"
+                     data-img="{{ alt.candidate.image_url }}"
+                     data-page="{{ alt.candidate.source_page_url }}"
+                     data-domain="{{ alt.candidate.source_domain }}"
+                     data-width="{{ alt.candidate.width or '' }}"
+                     data-height="{{ alt.candidate.height or '' }}"
+                     data-score="{{ alt.relevance_score }}"
+                     data-reason="{{ alt.reason }}"
+                     data-license="{{ alt.candidate.license.value }}"
+                     data-author="{{ alt.candidate.author or '' }}"
+                     data-attr="{{ alt.candidate.attribution_text or '' }}">
+              <a href="{{ alt.candidate.source_page_url }}" target="_blank" rel="noopener">
+                <img class="pick-thumb"
+                     src="{{ alt.candidate.local_thumbnail_path | relative_path(output_dir) if alt.candidate.local_thumbnail_path else alt.candidate.thumbnail_url }}"
+                     alt="{{ alt.candidate.title or alt.reason }}"
+                     loading="lazy">
+              </a>
+              <div class="badge-top-left">
+                <span class="rank-badge">Alt #{{ alt.rank }}</span>
+                <span class="score-badge" style="background: rgba(100, 116, 139, 0.85);">★ {{ "%.1f"|format(alt.relevance_score) }}</span>
+              </div>
+            </div>
+            <div class="pick-details">
+              <p class="pick-reason" style="font-size: 0.8rem;">{{ alt.reason }}</p>
+              <div class="meta-line">
+                <span class="license-badge license-{{ alt.candidate.license.value }}">{{ alt.candidate.license_name or alt.candidate.license.value }}</span>
+                <span>{{ alt.candidate.source_domain }}</span>
+              </div>
+              <div class="pick-links">
+                <a href="{{ alt.candidate.source_page_url }}" target="_blank" rel="noopener">Source Page ↗</a>
+                <a href="{{ alt.candidate.image_url }}" target="_blank" rel="noopener">Full Image ↗</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+
+      <!-- Video Leads (YouTube) -->
+      {% if rep.video_leads %}
+      <div class="video-leads-container">
+        <div class="video-leads-title">
+          <span>▶ Video Footage Leads ({{ rep.video_leads | length }})</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: normal;">— copyrighted, verify before use</span>
+        </div>
+        <div class="video-grid">
+          {% for vid in rep.video_leads %}
+          <div class="video-card">
+            <img class="video-thumb" src="{{ vid.thumbnail_url }}" alt="{{ vid.title }}">
+            <div class="video-info">
+              <h4>{{ vid.title }}</h4>
+              <p>{{ vid.channel_title }}</p>
+              <a href="{{ vid.video_url }}" target="_blank" rel="noopener">Watch on YouTube ↗</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Interactive Client-Side Script -->
+<script>
+  function toggleSelectAll(checked) {
+    document.querySelectorAll('.select-checkbox').forEach(cb => {
+      // If select all, only check rank 1 cards
+      if (checked) {
+        cb.checked = (cb.dataset.rank === "1");
+      } else {
+        cb.checked = false;
+      }
+    });
+  }
+
+  function exportSelectedCSV() {
+    const checkboxes = document.querySelectorAll('.select-checkbox:checked');
+    if (checkboxes.length === 0) {
+      alert("Please select at least one image before exporting.");
+      return;
+    }
+
+    const headers = [
+      "segment_id", "script_text", "rank", "image_url", "source_page_url",
+      "source_domain", "width", "height", "score", "reason", "license",
+      "author", "concerns", "attribution_text"
+    ];
+
+    let csvContent = headers.join(",") + "\n";
+
+    checkboxes.forEach(cb => {
+      const segId = cb.dataset.seg;
+      const card = document.getElementById(segId);
+      const scriptText = card ? card.querySelector('.narration-box').innerText.replace(/[\n\r]+/g, " ") : "";
+
+      const row = [
+        segId,
+        `"${scriptText.replace(/"/g, '""')}"`,
+        cb.dataset.rank || "1",
+        `"${cb.dataset.img || ''}"`,
+        `"${cb.dataset.page || ''}"`,
+        `"${cb.dataset.domain || ''}"`,
+        cb.dataset.width || "",
+        cb.dataset.height || "",
+        cb.dataset.score || "",
+        `"${(cb.dataset.reason || '').replace(/"/g, '""')}"`,
+        `"${cb.dataset.license || ''}"`,
+        `"${(cb.dataset.author || '').replace(/"/g, '""')}"`,
+        "",
+        `"${(cb.dataset.attr || '').replace(/"/g, '""')}"`
+      ];
+      csvContent += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "selected_footage.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+</script>
+
+</body>
+</html>

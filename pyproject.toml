@@ -1,0 +1,48 @@
+[project]
+name = "footage-finder"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "NhatTrieu-TayCan", email = "nguyentrieuporches@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.143.0",
+    "google-genai>=2.29.0",
+    "httpx>=0.28.1",
+    "imagehash>=4.3.2",
+    "jinja2>=3.1.6",
+    "pillow>=12.3.0",
+    "pydantic>=2.14.0",
+    "pydantic-settings>=2.15.0",
+    "python-docx>=1.2.0",
+    "python-multipart>=0.0.32",
+    "rich>=15.0.0",
+    "sse-starlette>=3.5.0",
+    "typer>=0.27.3",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+footage-finder = "footage_finder.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "respx>=0.23.1",
+    "ruff>=0.17.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+ignore = ["B008"]
+

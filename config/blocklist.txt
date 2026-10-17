@@ -1,0 +1,29 @@
+# Stock preview & watermarked image provider domains (Layer 1 Defense)
+# Any candidate whose image URL or source domain matches these domains is dropped immediately.
+
+shutterstock.com
+alamy.com
+gettyimages.com
+istockphoto.com
+dreamstime.com
+depositphotos.com
+123rf.com
+stock.adobe.com
+adobestock.com
+bigstockphoto.com
+canstockphoto.com
+agefotostock.com
+pond5.com
+storyblocks.com
+vectorstock.com
+freepik.com
+pinterest.com
+pinterest.co.uk
+pinterest.fr
+inmagine.com
+masterfile.com
+superstock.com
+pixtastock.com
+displate.com
+redbubble.com
+fineartamerica.com

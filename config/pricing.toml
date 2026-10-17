@@ -1,0 +1,27 @@
+# Estimated pricing per 1M tokens or per 1,000 API calls
+# All figures are labeled as estimates for budget tracking.
+
+[gemini."gemini-3.8-flash"]
+input_token_per_million = 0.15
+output_token_per_million = 0.60
+cached_input_token_per_million = 0.0375
+
+[gemini."gemini-2.5-flash"]
+input_token_per_million = 0.15
+output_token_per_million = 0.60
+cached_input_token_per_million = 0.0375
+
+[gemini."gemini-2.0-flash"]
+input_token_per_million = 0.10
+output_token_per_million = 0.40
+cached_input_token_per_million = 0.025
+
+[gemini."gemini-1.5-flash"]
+input_token_per_million = 0.075
+output_token_per_million = 0.30
+
+[serper]
+cost_per_thousand_queries = 1.00  # ~$0.001 per query
+
+[youtube]
+cost_per_thousand_queries = 0.00  # Default quota free tier
